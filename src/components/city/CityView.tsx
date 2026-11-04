@@ -3,10 +3,9 @@
 import { useEffect, useState } from 'react';
 import { fetchCity, type CityError } from '@/lib/api';
 import type { CitySnapshot } from '@/lib/snapshot';
+import { CityExperience } from './CityExperience';
 import { CityHeader } from './CityHeader';
-import { CityPanorama } from './CityPanorama';
 import { CityErrorScreen, CityLoading, EmptyLotNote } from './CityStates';
-import { RuleLegend } from './RuleLegend';
 
 type State = { status: 'loading' } | { status: 'ready'; snapshot: CitySnapshot } | { status: 'error'; error: CityError };
 
@@ -45,14 +44,19 @@ export function CityView({ username }: { username: string }) {
         avatarUrl={owner.avatarUrl}
         details={[owner.name, `${repos.length} ${repos.length === 1 ? 'building' : 'buildings'}`].filter(Boolean).join(' · ')}
       />
-      <CityPanorama snapshot={state.snapshot} />
-      {repos.length === 0 && <EmptyLotNote login={owner.login} />}
-      {totalRepoCount > repos.length && (
-        <p className="px-4 pt-4 text-sm text-mist sm:px-6">
-          Showing the {repos.length} most recently pushed of {totalRepoCount.toLocaleString()} public repos.
-        </p>
-      )}
-      <RuleLegend />
+      <CityExperience
+        snapshot={state.snapshot}
+        name={owner.login}
+        notice={
+          repos.length === 0 ? (
+            <EmptyLotNote login={owner.login} />
+          ) : totalRepoCount > repos.length ? (
+            <p className="px-4 pt-4 text-sm text-mist sm:px-6">
+              Showing the {repos.length} most recently pushed of {totalRepoCount.toLocaleString()} public repos.
+            </p>
+          ) : null
+        }
+      />
     </>
   );
 }

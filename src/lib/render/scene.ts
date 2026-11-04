@@ -3,6 +3,7 @@ import type { CityLayout } from '../city/types';
 import type { CanvasFactory, Glow, Sprite, View } from './canvas';
 import type { GlyphAtlas } from './glyphs';
 import { glowOffset } from './glow';
+import type { Rect } from './hit-test';
 import { buildSky, drawSky, moonPosition, type SkyArt } from './layers/sky';
 import { buildMidground, buildSkyline } from './layers/skyline';
 import { drawStrip, type Strip } from './layers/strip';
@@ -28,6 +29,7 @@ export interface Scene {
   midground: Strip;
   street: StreetArt;
   buildings: Sprite[];
+  /** One per building: `signs[i]` hangs on `layout.buildings[i]`. */
   signs: Sprite[];
   props: Sprite[];
   poles: Sprite[];
@@ -133,6 +135,11 @@ export function drawGlows(ctx: CanvasRenderingContext2D, scene: Scene, view: Vie
     ctx.drawImage(glow.canvas, (glow.x - view.x) * scale, (glow.y - view.y) * scale, glow.canvas.width * scale, glow.canvas.height * scale);
   }
   ctx.restore();
+}
+
+/** Sign outlines in world space, for hit testing; index i belongs to building i. */
+export function signRects(scene: Scene): Rect[] {
+  return scene.signs.map((sign) => ({ x: sign.x, y: sign.y, w: sign.canvas.width, h: sign.canvas.height }));
 }
 
 function drawSprites(ctx: CanvasRenderingContext2D, sprites: Sprite[], view: View): void {

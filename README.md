@@ -2,7 +2,7 @@
 
 Turn a GitHub profile into a pixel-art Japanese backstreet at night. Each public repo becomes a building: commits make it taller, its language picks the neon, recent pushes light the windows, and forks turn into little izakaya.
 
-> **Status:** work in progress. Cities are generated from real GitHub data; interactivity and animation follow.
+> **Status:** work in progress. Cities are generated from real GitHub data and fully explorable: drag, zoom, hover, click for details, share, and save as PNG. Animation and weather follow.
 
 ## Quick start
 
@@ -32,13 +32,15 @@ A classic [personal access token](https://github.com/settings/tokens) with **no 
 ```text
 src/
   app/              Next.js routes (App Router) and the /api/city route handler
-  components/       UI components
+  components/       UI components (city view, overlays, states)
+  hooks/            Scene building and reduced-motion hooks
   lib/
     snapshot.ts     The data contract between fetching and generation
     api.ts          The /api/city contract shared by server and browser
     github/         GraphQL query, pagination, normalization, errors, 1h cache
     city/           Pure, tested: seeding, building rules, layout, stats
-    render/         Canvas renderer: palette, glyphs, sprites, layers, scene
+    render/         Canvas renderer: palette, glyphs, sprites, layers, scene,
+                    camera, hit testing, live renderer, PNG panorama
     mock/           A fictional developer used by /demo and the tests
 ```
 

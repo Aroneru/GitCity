@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
+import { CityExperience } from '@/components/city/CityExperience';
 import { CityHeader } from '@/components/city/CityHeader';
-import { CityPanorama } from '@/components/city/CityPanorama';
-import { RuleLegend } from '@/components/city/RuleLegend';
 import { createDemoSnapshot } from '@/lib/mock/demo';
 
 export const metadata: Metadata = {
@@ -14,10 +13,9 @@ export default function DemoPage() {
   const snapshot = createDemoSnapshot();
 
   return (
-    <main className="flex flex-1 flex-col">
+    <main className="flex flex-1 flex-col pb-8">
       <CityHeader title="Demo city" details={`${snapshot.repos.length} buildings · mock data`} />
-      <CityPanorama snapshot={snapshot} />
-      <RuleLegend />
+      <CityExperience snapshot={snapshot} name="demo" />
     </main>
   );
 }

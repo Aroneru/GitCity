@@ -10,8 +10,8 @@ import { STREET_COLORS as C } from '../palette';
  * side streets at each crossing.
  */
 
-/** How far the street extends past the city on both ends. */
-export const STREET_PAD = 512;
+/** How far the street extends past the city on both ends (wide screens zoomed out see it). */
+export const STREET_PAD = 1024;
 
 export interface LightPool {
   /** Center x in world pixels. */

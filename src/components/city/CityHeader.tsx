@@ -31,7 +31,7 @@ export function CityHeader({ title, avatarUrl, details }: CityHeaderProps) {
         </div>
         {details && <p className="font-dot text-sm text-mist">{details}</p>}
       </div>
-      <p className="text-sm text-mist">Scroll sideways to walk the street.</p>
+      <p className="hidden text-sm text-mist sm:block">Drag to walk · scroll to zoom · click a building</p>
     </header>
   );
 }

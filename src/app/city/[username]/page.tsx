@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: PageProps<'/city/[username]'>
  */
 export default function CityPage({ params }: PageProps<'/city/[username]'>) {
   return (
-    <main className="flex flex-1 flex-col">
+    <main className="flex flex-1 flex-col pb-8">
       <Suspense fallback={<CityLoading />}>
         {params.then(({ username }) => (
           <CityView key={username} username={username} />
