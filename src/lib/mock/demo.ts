@@ -45,6 +45,7 @@ const DEMO_REPOS: DemoRepo[] = [
   { name: 'old-blog', description: 'My first blog. Please do not read the 2015 posts.', language: 'Ruby', commits: 340, stars: 4, sizeKb: 4200, pushed: 1150, created: 3400 },
   { name: 'flash-arcade', description: 'Browser games from a simpler time.', language: 'ActionScript', commits: 120, stars: 22, sizeKb: 15_000, pushed: 2200, created: 3600 },
   { name: 'jquery-tooltips', description: 'Tooltips for jQuery. Archived: use the platform.', language: 'JavaScript', commits: 88, stars: 140, sizeKb: 500, pushed: 1800, created: 3300, archived: true },
+  { name: 'flashcards', description: 'Kanji flashcards. Archived after moving to Anki.', language: 'Svelte', commits: 4, stars: 2, sizeKb: 640, pushed: 200, created: 700, archived: true },
   { name: 'advent-of-code', description: 'Puzzle solutions, one December at a time.', language: 'Python', commits: 150, stars: 9, sizeKb: 700, pushed: 330, created: 1800 },
   { name: 'hello-world', description: null, language: null, commits: 1, stars: 0, sizeKb: 1, pushed: 1900, created: 1900 },
   { name: 'todo', description: 'Nothing here yet.', language: null, commits: 0, stars: 0, sizeKb: 0, pushed: 10, created: 10 },

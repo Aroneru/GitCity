@@ -6,7 +6,7 @@ import { daysAgo, makeRepo, makeSnapshot } from './test-helpers';
 describe('computeStats', () => {
   it('summarizes the demo city', () => {
     const stats = computeStats(createDemoSnapshot());
-    expect(stats.buildings).toBe(35);
+    expect(stats.buildings).toBe(36);
     expect(stats.tallest).toMatchObject({ name: 'night-shift', commits: 3120 });
     // Python, Ruby, Rust and TypeScript tie at two repos; ties go alphabetically.
     expect(stats.topLanguage).toEqual({ name: 'Python', repos: 2 });

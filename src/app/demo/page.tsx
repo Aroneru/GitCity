@@ -6,7 +6,7 @@ import { createDemoSnapshot } from '@/lib/mock/demo';
 
 export const metadata: Metadata = {
   title: 'Demo city',
-  description: 'A fictional developer’s 35 repositories as one street, showing every building rule.',
+  description: 'A fictional developer’s repositories as one street, showing every building rule.',
 };
 
 export default function DemoPage() {
