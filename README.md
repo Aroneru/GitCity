@@ -2,16 +2,19 @@
 
 Turn a GitHub profile into a pixel-art Japanese backstreet at night. Each public repo becomes a building: commits make it taller, its language picks the neon, recent pushes light the windows, and forks turn into little izakaya.
 
-> **Status:** work in progress. A city generated from mock data is live at `/demo`; real GitHub data, interactivity and animation follow.
+> **Status:** work in progress. Cities are generated from real GitHub data; interactivity and animation follow.
 
 ## Quick start
 
 ```bash
 npm install
+cp .env.example .env.local   # then add your GITHUB_TOKEN
 npm run dev
 ```
 
-Open http://localhost:3000/demo.
+Open http://localhost:3000 and enter a username, or visit `/city/<username>` directly. `/demo` works without a token.
+
+A classic [personal access token](https://github.com/settings/tokens) with **no scopes** is enough: the app only reads public data. The token stays on the server; the browser only ever talks to `/api/city/[username]`.
 
 ## Scripts
 
@@ -28,10 +31,12 @@ Open http://localhost:3000/demo.
 
 ```
 src/
-  app/              Next.js routes (App Router)
+  app/              Next.js routes (App Router) and the /api/city route handler
   components/       UI components
   lib/
     snapshot.ts     The data contract between fetching and generation
+    api.ts          The /api/city contract shared by server and browser
+    github/         GraphQL query, pagination, normalization, errors, 1h cache
     city/           Pure, tested: seeding, building rules, layout, stats
     render/         Canvas renderer: palette, glyphs, sprites, layers, scene
     mock/           A fictional developer used by /demo and the tests
