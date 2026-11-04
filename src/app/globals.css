@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/* Night palette shared with the canvas renderer (src/lib/render/palette.ts). */
+@theme {
+  --color-night-950: #05071a;
+  --color-night-900: #0a0d26;
+  --color-night-800: #11163b;
+  --color-night-700: #1a2050;
+  --color-night-600: #262d66;
+  --color-paper: #f3ead6;
+  --color-mist: #b9b3d6;
+  --color-neon-pink: #ff5fae;
+  --color-neon-cyan: #45e4ff;
+  --color-neon-amber: #ffbe45;
+  --color-neon-red: #ff5a52;
+  --color-lantern: #e2382e;
+}
+
+@theme inline {
+  --font-pixel: var(--font-press-start), ui-monospace, monospace;
+  --font-dot: var(--font-dotgothic), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Upscaled pixel art must never be smoothed. */
+@utility pixelated {
+  image-rendering: pixelated;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-night-950);
+  color: var(--color-paper);
+}
