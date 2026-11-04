@@ -12,7 +12,7 @@ cp .env.example .env.local   # then add your GITHUB_TOKEN
 npm run dev
 ```
 
-Open http://localhost:3000 and enter a username, or visit `/city/<username>` directly. `/demo` works without a token.
+Open <http://localhost:3000> and enter a username, or visit `/city/<username>` directly. `/demo` works without a token.
 
 A classic [personal access token](https://github.com/settings/tokens) with **no scopes** is enough: the app only reads public data. The token stays on the server; the browser only ever talks to `/api/city/[username]`.
 
@@ -29,7 +29,7 @@ A classic [personal access token](https://github.com/settings/tokens) with **no 
 
 ## How the code is organised
 
-```
+```text
 src/
   app/              Next.js routes (App Router) and the /api/city route handler
   components/       UI components
