@@ -18,7 +18,23 @@ export interface BuildingArt {
   sprite: Sprite;
   glows: Glow[];
   pools: LightPool[];
+  /** Upper-floor windows, so the frame can switch some on and off over time. */
+  windows: WindowCell[];
+  /** The blinking light on a beacon mast. */
+  beacon: { x: number; y: number; seed: number } | null;
 }
+
+/** A window in world space and whether it is lit in the baked sprite. */
+export interface WindowCell {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  lit: boolean;
+  seed: number;
+}
+
+type WindowRecorder = (x: number, y: number, w: number, h: number, lit: boolean) => void;
 
 const SIDE = 4;
 type Ctx = CanvasRenderingContext2D;
@@ -40,23 +56,31 @@ export function drawBuilding(b: PlacedBuilding, createCanvas: CanvasFactory): Bu
   const glows: Glow[] = [];
   const pools: LightPool[] = [];
   const toWorld = (x: number, y: number) => ({ x: b.x - SIDE + x, y: -b.height - top + y });
-  const addGlow: GlowAdder = (x, y, w, h, color, radius, alpha) => {
-    glows.push(rectGlow(toWorld(x, y), w, h, color, radius, alpha, createCanvas));
+  const addGlow: GlowAdder = (x, y, w, h, color, radius, alpha, beacon) => {
+    const glow = rectGlow(toWorld(x, y), w, h, color, radius, alpha, createCanvas);
+    glows.push(beacon ? { ...glow, pulse: { kind: 'beacon', seed: b.seed } } : glow);
   };
+  const windows: WindowCell[] = [];
+  const recordWindow: WindowRecorder = (x, y, w, h, lit) => {
+    if (!b.abandoned) windows.push({ ...toWorld(x, y), w, h, lit, seed: (b.seed + (windows.length + 1) * 0x9e3779b1) >>> 0 });
+  };
+  let beacon: BuildingArt['beacon'] = null;
 
-  drawFacade(ctx, b, material, ox, oy, rng);
+  drawFacade(ctx, b, material, ox, oy, rng, recordWindow);
   const front = drawGroundFloor(ctx, b, material, ox, oy, rng);
   if (front) {
     pools.push({ x: b.x + front.x - ox + front.w / 2, radius: Math.max(8, front.w * 0.7), tone: front.tone, strength: front.strength });
     addGlow(front.x, front.y, front.w, front.h, front.tone === 'warm' ? WINDOW.warm : SHOP.lobby, 3, front.tone === 'warm' ? 0.18 : 0.1);
   }
   drawRoofClutter(ctx, b, ox, oy, rng);
-  drawRooftopTier(ctx, b, ox, oy, rng, addGlow);
+  drawRooftopTier(ctx, b, ox, oy, rng, addGlow, (x, y) => {
+    beacon = { ...toWorld(x, y), seed: b.seed };
+  });
 
-  return { sprite: { canvas, ...toWorld(0, 0) }, glows, pools };
+  return { sprite: { canvas, ...toWorld(0, 0) }, glows, pools, windows, beacon };
 }
 
-function drawFacade(ctx: Ctx, b: PlacedBuilding, m: Material, ox: number, oy: number, rng: Rng): void {
+function drawFacade(ctx: Ctx, b: PlacedBuilding, m: Material, ox: number, oy: number, rng: Rng, recordWindow: WindowRecorder): void {
   const { width: w, height: h } = b;
   rect(ctx, ox, oy, w, h, m.base);
   vline(ctx, ox, oy, h, m.shade);
@@ -72,8 +96,9 @@ function drawFacade(ctx: Ctx, b: PlacedBuilding, m: Material, ox: number, oy: nu
   for (let f = 0; f < upperFloors; f++) {
     const fy = oy + GEOMETRY.parapet + f * GEOMETRY.floor;
     hline(ctx, ox + 1, fy + GEOMETRY.floor - 1, w - 2, m.line);
+    // Offices light up floor by floor: a lit floor has most windows on.
     const floorLit = rng.next() < b.litRatio;
-    style(fy, (lit) => lit || (floorLit ? rng.next() < 0.8 : rng.next() < b.litRatio * 0.25));
+    style(fy, () => (floorLit ? rng.next() < 0.8 : rng.next() < b.litRatio * 0.25));
   }
 
   // A drainpipe and the odd external staircase on mid-rises.
@@ -88,28 +113,30 @@ function drawFacade(ctx: Ctx, b: PlacedBuilding, m: Material, ox: number, oy: nu
   }
 
   function windowStyle(building: PlacedBuilding, material: Material, r: Rng) {
-    type LitTest = (forced: boolean) => boolean;
+    type LitTest = () => boolean;
     const cool = building.kind === 'tower' ? 0.55 : building.kind === 'midrise' ? 0.3 : 0.08;
-    const paint = (x: number, y: number, ww: number, wh: number, lit: boolean) =>
+    const paint = (x: number, y: number, ww: number, wh: number, lit: boolean) => {
       drawWindow(ctx, x, y, ww, wh, lit ? (r.chance(0.04) ? 'tv' : r.chance(cool) ? 'cool' : 'warm') : 'dark', building.abandoned, r);
+      recordWindow(x, y, ww, wh, lit);
+    };
 
     if (building.kind === 'tower' && material === MATERIALS.glass) {
       // Curtain wall: a continuous glass band per floor.
       return (fy: number, isLit: LitTest) => {
         rect(ctx, ox + 2, fy + 2, w - 4, 6, MATERIALS.glass.line);
-        for (let x = ox + 3; x + 3 <= ox + w - 2; x += 4) paint(x, fy + 2, 3, 6, isLit(false));
+        for (let x = ox + 3; x + 3 <= ox + w - 2; x += 4) paint(x, fy + 2, 3, 6, isLit());
       };
     }
     if (building.kind === 'tower') {
       return (fy: number, isLit: LitTest) => {
-        for (let x = ox + 3; x + 5 <= ox + w - 2; x += 6) paint(x, fy + 2, 5, 5, isLit(false));
+        for (let x = ox + 3; x + 5 <= ox + w - 2; x += 6) paint(x, fy + 2, 5, 5, isLit());
       };
     }
     if (building.kind === 'midrise') {
       const n = Math.floor((w - 4) / 6);
       const start = ox + Math.floor((w - (n * 6 - 2)) / 2);
       return (fy: number, isLit: LitTest) => {
-        for (let i = 0; i < n; i++) paint(start + i * 6, fy + 2, 4, 5, isLit(false));
+        for (let i = 0; i < n; i++) paint(start + i * 6, fy + 2, 4, 5, isLit());
       };
     }
     // Shops: flats above with small balconies and the odd AC unit.
@@ -118,7 +145,7 @@ function drawFacade(ctx: Ctx, b: PlacedBuilding, m: Material, ox: number, oy: nu
     return (fy: number, isLit: LitTest) => {
       for (let i = 0; i < n; i++) {
         const x = start + i * 9;
-        paint(x, fy + 1, 6, 5, isLit(false));
+        paint(x, fy + 1, 6, 5, isLit());
         hline(ctx, x - 1, fy + 7, 8, material.trim);
         for (let p = x - 1; p < x + 7; p += 2) px(ctx, p, fy + 6, material.trim);
         if (r.chance(0.3)) {
@@ -301,9 +328,17 @@ function drawRoofClutter(ctx: Ctx, b: PlacedBuilding, ox: number, oy: number, rn
   }
 }
 
-type GlowAdder = (x: number, y: number, w: number, h: number, color: string, radius: number, alpha: number) => void;
+type GlowAdder = (x: number, y: number, w: number, h: number, color: string, radius: number, alpha: number, beacon?: boolean) => void;
 
-function drawRooftopTier(ctx: Ctx, b: PlacedBuilding, ox: number, oy: number, rng: Rng, addGlow: GlowAdder): void {
+function drawRooftopTier(
+  ctx: Ctx,
+  b: PlacedBuilding,
+  ox: number,
+  oy: number,
+  rng: Rng,
+  addGlow: GlowAdder,
+  onBeacon: (x: number, y: number) => void,
+): void {
   if (b.rooftop === 'none') return;
   const w = b.width;
   const neon = NEON[b.neon];
@@ -343,8 +378,12 @@ function drawRooftopTier(ctx: Ctx, b: PlacedBuilding, ox: number, oy: number, rn
     const mastTop = by - 20;
     vline(ctx, mx, mastTop, 20, ROOF.metalHi);
     for (let y = mastTop + 3; y < by; y += 4) hline(ctx, mx - 1, y, 3, ROOF.metal);
-    rect(ctx, mx - 1, mastTop - 2, 3, 2, '#ff3030');
-    px(ctx, mx, mastTop - 2, '#ffb0a0');
-    addGlow(mx - 1, mastTop - 2, 3, 2, '#ff2a2a', 4, 0.9);
+    rect(ctx, mx - 1, mastTop - 2, 3, 2, BEACON.on);
+    px(ctx, mx, mastTop - 2, BEACON.core);
+    addGlow(mx - 1, mastTop - 2, 3, 2, BEACON.glow, 4, 0.9, true);
+    onBeacon(mx - 1, mastTop - 2);
   }
 }
+
+/** The beacon's red lamp; `off` is what it looks like between blinks. */
+export const BEACON = { on: '#ff3030', core: '#ffb0a0', off: '#4a1c22', glow: '#ff2a2a', w: 3, h: 2 } as const;

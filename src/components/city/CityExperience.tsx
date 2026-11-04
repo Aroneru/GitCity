@@ -27,16 +27,17 @@ type Hover = { index: number; x: number; y: number; stage: { width: number; heig
 
 /**
  * The interactive city with its overlays: stats, details panel, tooltip,
- * toolbar (zoom, share, PNG export), and a directory of every building.
- * The selected building is mirrored in the URL (`?repo=name`) so links can
- * point straight at it.
+ * toolbar (zoom, rain, share, PNG export), and a directory of every
+ * building. The selected building and the rain are mirrored in the URL
+ * (`?repo=name&rain=1`) so a shared link opens the same way.
  */
 export function CityExperience({ snapshot, name, notice }: CityExperienceProps) {
   const sceneState = useCityScene(snapshot);
   const reducedMotion = useReducedMotion();
   const stats = useMemo(() => computeStats(snapshot), [snapshot]);
   const repos = useMemo(() => new Map(snapshot.repos.map((repo) => [repo.name, repo])), [snapshot]);
-  const [selectedName, setSelectedName] = useState<string | null>(readRepoParam);
+  const [selectedName, setSelectedName] = useState<string | null>(() => readParam('repo'));
+  const [rain, setRain] = useState(() => readParam('rain') === '1');
   const [hover, setHover] = useState<Hover | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -53,7 +54,7 @@ export function CityExperience({ snapshot, name, notice }: CityExperienceProps) 
     (index: number | null, focus = false) => {
       const repoName = index === null ? null : (buildings[index]?.id ?? null);
       setSelectedName(repoName);
-      writeRepoParam(repoName);
+      writeParam('repo', repoName);
       if (index !== null && focus) canvasRef.current?.focusBuilding(index);
     },
     [buildings],
@@ -86,6 +87,12 @@ export function CityExperience({ snapshot, name, notice }: CityExperienceProps) 
     return () => document.removeEventListener('keydown', onKey);
   }, [selected, select]);
 
+  const toggleRain = () => {
+    const next = !rain;
+    setRain(next);
+    writeParam('rain', next ? '1' : null);
+  };
+
   const share = async () => {
     const url = window.location.href;
     if (typeof navigator.share === 'function' && window.matchMedia('(pointer: coarse)').matches) {
@@ -107,7 +114,7 @@ export function CityExperience({ snapshot, name, notice }: CityExperienceProps) 
       // Let the button show its busy state before the heavy render.
       await new Promise((resolve) => setTimeout(resolve, 0));
       const view = panoramaView(scene.layout);
-      const canvas = renderPanorama(scene, chooseExportScale(view.w, view.h), createDomCanvas, { caption: `gitcity / ${name}` });
+      const canvas = renderPanorama(scene, chooseExportScale(view.w, view.h), createDomCanvas, { caption: `gitcity / ${name}`, rain });
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
       if (!blob) throw new Error('PNG encoding failed');
       downloadBlob(blob, `gitcity-${name}.png`);
@@ -139,7 +146,8 @@ export function CityExperience({ snapshot, name, notice }: CityExperienceProps) 
               hovered={hovered?.index ?? null}
               selected={selected}
               initialFocus={selected}
-              reducedMotion={reducedMotion}
+              animate={!reducedMotion}
+              rain={rain}
               onHover={onHover}
               onSelect={select}
             />
@@ -162,6 +170,8 @@ export function CityExperience({ snapshot, name, notice }: CityExperienceProps) 
               onReset={() => canvasRef.current?.resetView()}
               onShare={share}
               onExport={exportPng}
+              onToggleRain={toggleRain}
+              rain={rain}
               exporting={exporting}
               message={message}
             />
@@ -203,14 +213,15 @@ function SceneStatus({ failed }: { failed: boolean }) {
   );
 }
 
-function readRepoParam(): string | null {
-  return typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('repo');
+function readParam(name: string): string | null {
+  return typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get(name);
 }
 
-function writeRepoParam(repoName: string | null): void {
+/** Mirror view state in the URL, so a shared link opens the same way. */
+function writeParam(name: string, value: string | null): void {
   const url = new URL(window.location.href);
-  if (repoName) url.searchParams.set('repo', repoName);
-  else url.searchParams.delete('repo');
+  if (value) url.searchParams.set(name, value);
+  else url.searchParams.delete(name);
   window.history.replaceState(window.history.state, '', url);
 }
 

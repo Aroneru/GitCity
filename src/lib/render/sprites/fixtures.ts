@@ -18,6 +18,8 @@ export interface FixtureArt {
   sprite: Sprite;
   glows: Glow[];
   pools: LightPool[];
+  /** Where steam rises, in world space (the food stall's pot). */
+  steam: Array<{ x: number; y: number }>;
 }
 
 const HEIGHT = { konbini: 32, yatai: 34, shrine: 46, lot: 30 } as const;
@@ -29,6 +31,7 @@ export function drawFixture(fixture: Fixture, atlas: GlyphAtlas, createCanvas: C
   const at = (x: number, y: number) => ({ x: sprite.x + x, y: sprite.y + y });
   const glows: Glow[] = [];
   const pools: LightPool[] = [];
+  const steam: FixtureArt['steam'] = [];
   const w = fixture.width;
   const rng = createRng(fixture.seed);
 
@@ -74,6 +77,8 @@ export function drawFixture(fixture: Fixture, atlas: GlyphAtlas, createCanvas: C
       hline(ctx, 3, 10, w - 6, '#ffe6b8');
       rect(ctx, Math.floor(w / 2) - 4, 15, 8, 5, '#3a3d50');
       hline(ctx, Math.floor(w / 2) - 4, 15, 8, '#5a5e74');
+      // The pot's steam escapes over the canopy, where it shows against the sky.
+      steam.push(at(Math.floor(w / 2) - 2, 0));
       rect(ctx, 0, h - 13, w, 2, WOOD.light);
       rect(ctx, 1, h - 11, w - 2, 9, WOOD.base);
       for (let x = 3; x < w - 2; x += 4) vline(ctx, x, h - 11, 9, WOOD.shade);
@@ -149,5 +154,5 @@ export function drawFixture(fixture: Fixture, atlas: GlyphAtlas, createCanvas: C
       break;
     }
   }
-  return { sprite, glows, pools };
+  return { sprite, glows, pools, steam };
 }

@@ -1,3 +1,5 @@
+import type { SignBehavior } from './animation';
+
 /**
  * Canvas creation is injected so the renderer runs anywhere a Canvas 2D
  * implementation exists: the browser, or a Node canvas for previews.
@@ -39,6 +41,8 @@ export interface Sprite {
 /** A pre-blurred glow composited additively after upscaling. */
 export interface Glow extends Sprite {
   alpha: number;
+  /** Ties the glow's brightness to an animated light. */
+  pulse?: { kind: 'neon'; seed: number; behavior: SignBehavior } | { kind: 'beacon'; seed: number };
 }
 
 /** A rectangle of world space being drawn. */
@@ -47,4 +51,20 @@ export interface View {
   y: number;
   w: number;
   h: number;
+}
+
+export function spriteVisible(sprite: Sprite, view: View): boolean {
+  return (
+    sprite.x < view.x + view.w &&
+    sprite.x + sprite.canvas.width > view.x &&
+    sprite.y < view.y + view.h &&
+    sprite.y + sprite.canvas.height > view.y
+  );
+}
+
+/** Draw world-space sprites into a view-sized canvas, skipping those off screen. */
+export function drawSprites(ctx: CanvasRenderingContext2D, sprites: readonly Sprite[], view: View): void {
+  for (const sprite of sprites) {
+    if (spriteVisible(sprite, view)) ctx.drawImage(sprite.canvas, Math.round(sprite.x - view.x), Math.round(sprite.y - view.y));
+  }
 }

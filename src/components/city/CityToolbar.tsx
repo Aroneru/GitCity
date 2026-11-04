@@ -6,12 +6,14 @@ interface CityToolbarProps {
   onReset: () => void;
   onShare: () => void;
   onExport: () => void;
+  onToggleRain: () => void;
+  rain: boolean;
   exporting: boolean;
   /** A short confirmation, e.g. "Link copied". */
   message: string | null;
 }
 
-export function CityToolbar({ onZoomIn, onZoomOut, onReset, onShare, onExport, exporting, message }: CityToolbarProps) {
+export function CityToolbar({ onZoomIn, onZoomOut, onReset, onShare, onExport, onToggleRain, rain, exporting, message }: CityToolbarProps) {
   return (
     <div className="absolute bottom-3 right-3 flex flex-col items-end gap-2">
       <p role="status" className={message ? 'border-2 border-night-600 bg-night-900/95 px-3 py-2 font-dot text-sm text-paper' : 'sr-only'}>
@@ -21,6 +23,7 @@ export function CityToolbar({ onZoomIn, onZoomOut, onReset, onShare, onExport, e
         <ToolButton icon="plus" label="Zoom in (+)" onClick={onZoomIn} />
         <ToolButton icon="minus" label="Zoom out (−)" onClick={onZoomOut} />
         <ToolButton icon="fit" label="Reset the view (0)" onClick={onReset} />
+        <ToolButton icon="umbrella" label="Rain" onClick={onToggleRain} pressed={rain} />
         <ToolButton icon="link" label="Share a link to this city" onClick={onShare} />
         <ToolButton icon="download" label={exporting ? 'Saving the PNG…' : 'Save the whole street as a PNG'} onClick={onExport} disabled={exporting} />
       </div>
@@ -28,15 +31,29 @@ export function CityToolbar({ onZoomIn, onZoomOut, onReset, onShare, onExport, e
   );
 }
 
-function ToolButton({ icon, label, onClick, disabled }: { icon: IconName; label: string; onClick: () => void; disabled?: boolean }) {
+function ToolButton({
+  icon,
+  label,
+  onClick,
+  disabled,
+  pressed,
+}: {
+  icon: IconName;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  /** For toggles: whether it is on. */
+  pressed?: boolean;
+}) {
   return (
     <button
       type="button"
       aria-label={label}
+      aria-pressed={pressed}
       title={label}
       onClick={onClick}
       disabled={disabled}
-      className="flex h-10 w-10 items-center justify-center text-paper transition-colors hover:bg-night-700 hover:text-neon-amber focus-visible:outline-2 focus-visible:outline-neon-cyan disabled:opacity-50 motion-reduce:transition-none"
+      className="flex h-10 w-10 items-center justify-center text-paper transition-colors hover:bg-night-700 hover:text-neon-amber focus-visible:outline-2 focus-visible:outline-neon-cyan disabled:opacity-50 aria-pressed:bg-night-700 aria-pressed:text-neon-cyan motion-reduce:transition-none"
     >
       <PixelIcon name={icon} />
     </button>

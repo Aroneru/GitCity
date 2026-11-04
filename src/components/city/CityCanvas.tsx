@@ -20,12 +20,14 @@ interface CityCanvasProps extends ControlHandlers {
   selected: number | null;
   /** Building to frame in the opening shot. */
   initialFocus: number | null;
-  reducedMotion: boolean;
+  /** False for visitors who prefer reduced motion: a still city. */
+  animate: boolean;
+  rain: boolean;
   ref?: Ref<CityCanvasHandle>;
 }
 
 /** The interactive city: drag, zoom, hover and select. */
-export function CityCanvas({ scene, label, hovered, selected, initialFocus, reducedMotion, onHover, onSelect, ref }: CityCanvasProps) {
+export function CityCanvas({ scene, label, hovered, selected, initialFocus, animate, rain, onHover, onSelect, ref }: CityCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<CityRenderer | null>(null);
   const handlers = useRef<ControlHandlers>({ onHover, onSelect });
@@ -42,12 +44,16 @@ export function CityCanvas({ scene, label, hovered, selected, initialFocus, redu
     rendererRef.current = renderer;
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1, openingFocus.current);
     fit();
-    const observer = new ResizeObserver(fit);
-    observer.observe(canvas);
+    const resizes = new ResizeObserver(fit);
+    resizes.observe(canvas);
+    // Stop animating while the city is scrolled out of view.
+    const visibility = new IntersectionObserver(([entry]) => renderer.setVisible(entry.isIntersecting));
+    visibility.observe(canvas);
     const detach = attachControls(canvas, renderer, handlers);
     return () => {
       detach();
-      observer.disconnect();
+      resizes.disconnect();
+      visibility.disconnect();
       renderer.destroy();
       rendererRef.current = null;
     };
@@ -58,8 +64,12 @@ export function CityCanvas({ scene, label, hovered, selected, initialFocus, redu
   }, [scene, hovered, selected]);
 
   useEffect(() => {
-    if (rendererRef.current) rendererRef.current.reducedMotion = reducedMotion;
-  }, [scene, reducedMotion]);
+    rendererRef.current?.setAnimate(animate);
+  }, [scene, animate]);
+
+  useEffect(() => {
+    rendererRef.current?.setRain(rain);
+  }, [scene, rain]);
 
   useImperativeHandle(
     ref,
