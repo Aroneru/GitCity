@@ -2,8 +2,7 @@
 
 Turn a GitHub profile into a pixel-art Japanese backstreet at night. Every public repository becomes a building: commits make it taller, its language picks the neon, recent pushes light the windows, and forks become little izakaya hung with red paper lanterns.
 
-<!-- Screenshot: add a capture of /demo (for example docs/screenshot.png) and link it here. -->
-> **Screenshot placeholder.** Add a capture of the demo city here.
+![The demo city: lit office towers and a hotel under vertical neon signs, a konbini, a small shrine and an elevated railway, with a taxi driving along the street at night](docs/screenshot.png)
 
 ## Features
 
@@ -105,18 +104,6 @@ src/
                     hit testing, animation timing, live renderer, PNG export
     mock/           A fictional developer used by /demo and the tests
 ```
-
-## Deploying
-
-**Vercel** (recommended):
-
-1. Import the repository.
-2. Add `GITHUB_TOKEN` under Project Settings → Environment Variables.
-3. Deploy.
-
-No other configuration is needed.
-
-**Any Node.js host:** run `npm run build && npm start`. Without a platform cache handler, the GitHub cache lives in memory per server instance.
 
 ## Testing
 
